@@ -4,10 +4,11 @@ import time
 SINGLE_POLL_BYTES = bytes.fromhex('BB 00 22 00 00 22 7E')
 MULTIPLE_POLL_BEGIN_BYTES = bytes.fromhex('BB 00 27 00 03 22 27 10 83 7E')
 MULTIPLE_POLL_STOP_BYTES = bytes.fromhex('BB 00 28 00 00 28 7E')
+PORT = 'COM4'
 
 SCAN_FREQUENCY = 1
 
-ser = serial.Serial('COM4', 115200, timeout=0.5)
+ser = serial.Serial(PORT, 115200, timeout=0.5)
 
 print(f"Beginning inventory (scan every {SCAN_FREQUENCY} seconds)")
 
