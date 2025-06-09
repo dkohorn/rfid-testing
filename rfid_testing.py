@@ -8,6 +8,15 @@ PORT = 'COM4'
 
 SCAN_FREQUENCY = 1
 
+# These will match the EPC hex values to tags from the kit for easier ID during testing
+medium1 = '00471118b06026a28e0114346c'
+medium2 = '004717929064269d88010e9392' 
+large = '8068940000501a4a9584a57fde'
+small = '801190a50300614bffd47b7d31'
+card = '000017570d0155255013e89a23'
+
+
+
 ser = serial.Serial(PORT, 115200, timeout=0.5)
 
 print(f"Beginning inventory (scan every {SCAN_FREQUENCY} seconds)")
@@ -44,6 +53,18 @@ try:
                             #This should be the EPC value finally (96 bit standard size)
                             print("\nEPC tag hex:", frame)
                             print("Signal strength:", rssi)
+                            
+                            #Print the name of the tag
+                            if frame == medium1:
+                                print("Tag name: medium1")
+                            elif frame == medium2:
+                                print("Tag name: medium2")
+                            elif frame == large:
+                                print("Tag name: large")
+                            elif frame == small:
+                                print("Tag name: small")
+                            else:
+                                print("Tag name: card")
             else:
                 print("\nError data frame (nothing scanned):", data)
 
