@@ -10,7 +10,7 @@ This repository contains code for an RPi5. This project serves to test the capab
 
 ## How to Use
 
-Download rfid_testing.py onto an RPi5 and connect an RFID scanner via USB. All output on scanned tags will be displayed to the console after running the program.
+Download rfid_testing.py onto an RPi5 and connect an RFID scanner via USB. All output on scanned tags will be displayed to the console after running the program. Ensure ports for serial reading are configured correctly.
 
 ## Things to note
 
