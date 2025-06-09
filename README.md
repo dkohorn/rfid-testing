@@ -6,11 +6,11 @@ All code was written by me with the aid of ChatGPT.
 
 ## Contents and Purpose
 
-This repository contains code for an RPi5. This project serves to test the capabilites of a connected RFID scanner.
+This repository contains code a connected RFID scanner. This project serves to test the capabilites of the scanner.
 
 ## How to Use
 
-Download rfid_testing.py onto an RPi5 and connect an RFID scanner via USB. All output on scanned tags will be displayed to the console after running the program. Ensure ports for serial reading are configured correctly.
+Download rfid_testing.py onto a machine and connect an RFID scanner via USB. All output on scanned tags will be displayed to the console after running the program. Ensure ports for serial reading are configured correctly.
 
 ## Things to note
 
