@@ -1,21 +1,25 @@
 import serial
 import time
+from collections import defaultdict
 
 SINGLE_POLL_BYTES = bytes.fromhex('BB 00 22 00 00 22 7E')
 MULTIPLE_POLL_BEGIN_BYTES = bytes.fromhex('BB 00 27 00 03 22 27 10 83 7E')
 MULTIPLE_POLL_STOP_BYTES = bytes.fromhex('BB 00 28 00 00 28 7E')
+
 PORT = 'COM4'
+ser = serial.Serial(PORT, 115200, timeout=0.5)
 
 SCAN_FREQUENCY = 1
+NUM_READINGS = 25
 
 # These will match the EPC hex values to tags from the kit for easier ID during testing
-epc_name_match = {
+epc_name_match = defaultdict(lambda: "Unknown or empty tag", {
     '00471118b06026a28e0114346c': "medium1",
     '004717929064269d88010e9392': "medium2",
     '8068940000501a4a9584a57fde': "large",
     '801190a50300614bffd47b7d31': "small",
     '000017570d0155255013e89a23': "card"
-}
+})
 
 medium1_scan_count = 0
 medium2_scan_count = 0
@@ -31,10 +35,6 @@ card_rssi_total = 0
 
 
 
-
-num_readings = 25
-
-ser = serial.Serial(PORT, 115200, timeout=0.5)
 
 # Return a list [epc, rssi] that is extracted from a frame or None if error frame
 def extract_epc_rssi(frame):
@@ -61,19 +61,19 @@ def update_totals(tag_name, rssi):
 
     if tag_name == "medium1":
         medium1_scan_count += 1
-        medium1_rssi_total += int(rssi)
+        medium1_rssi_total += int(rssi, 16)
     elif tag_name == "medium2":
         medium2_scan_count += 1
-        medium2_rssi_total += int(rssi)
+        medium2_rssi_total += int(rssi, 16)
     elif tag_name == "large":
         large_scan_count += 1
-        large_rssi_total += int(rssi)
+        large_rssi_total += int(rssi, 16)
     elif tag_name == "small":
         small_scan_count += 1
-        small_rssi_total += int(rssi)
+        small_rssi_total += int(rssi, 16)
     else:
         card_scan_count += 1
-        card_rssi_total += int(rssi)
+        card_rssi_total += int(rssi, 16)
     
 
 
@@ -84,7 +84,7 @@ def update_totals(tag_name, rssi):
 print(f"Beginning inventory (scan every {SCAN_FREQUENCY} seconds)")
 
 try:
-    for i in range(num_readings + 1):
+    for i in range(NUM_READINGS + 1):
         ser.write(SINGLE_POLL_BYTES)
         data = ser.read(ser.in_waiting or 1)
 
@@ -100,7 +100,7 @@ try:
                         tag_info = extract_epc_rssi(frame)
                         
                         if tag_info == None:  
-                            print("Received error frame bb01ff00011516 (no RFID scanned or failed CRC check)")
+                            print("Received error frame (no RFID scanned or failed CRC check)")
                         else:
                             print("EPC:", tag_info[0], "| RSSI:", tag_info[1], "| Name:", epc_name_match[tag_info[0]])
                             update_totals(epc_name_match[tag_info[0]], tag_info[1])
@@ -111,15 +111,15 @@ try:
 
     print("Totals:\n")
     if (medium1_scan_count > 0):
-        print(f"Medium 1 | Scans {medium1_scan_count}/{num_readings} | Avg RSSI = {medium1_rssi_total / medium1_scan_count}")
+        print(f"Medium 1 | Scans {medium1_scan_count}/{NUM_READINGS} | Avg RSSI = {medium1_rssi_total / medium1_scan_count}")
     if (medium2_scan_count > 0):
-        print(f"Medium 2 | Scans {medium2_scan_count}/{num_readings} | Avg RSSI = {medium2_rssi_total / medium2_scan_count}")
+        print(f"Medium 2 | Scans {medium2_scan_count}/{NUM_READINGS} | Avg RSSI = {medium2_rssi_total / medium2_scan_count}")
     if (large_scan_count > 0):
-        print(f"Large | Scans {large_scan_count}/{num_readings} | Avg RSSI = {large_rssi_total / large_scan_count}")
+        print(f"Large | Scans {large_scan_count}/{NUM_READINGS} | Avg RSSI = {large_rssi_total / large_scan_count}")
     if (small_scan_count > 0):
-        print(f"Small | Scans {small_scan_count}/{num_readings} | Avg RSSI = {small_rssi_total / small_scan_count}")
+        print(f"Small | Scans {small_scan_count}/{NUM_READINGS} | Avg RSSI = {small_rssi_total / small_scan_count}")
     if (card_scan_count > 0):
-        print(f"Card | Scans {card_scan_count}/{num_readings} | Avg RSSI = {card_rssi_total / card_scan_count}")
+        print(f"Card | Scans {card_scan_count}/{NUM_READINGS} | Avg RSSI = {card_rssi_total / card_scan_count}")
 
 except KeyboardInterrupt:
     print("\nStopping inventory")
