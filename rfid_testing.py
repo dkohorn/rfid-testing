@@ -9,11 +9,11 @@ MULTIPLE_POLL_STOP_BYTES = bytes.fromhex('BB 00 28 00 00 28 7E')
 PORT = 'COM4'
 ser = serial.Serial(PORT, 115200, timeout=0.5)
 
-SCAN_FREQUENCY = 1
-NUM_READINGS = 25
+SCAN_FREQUENCY = 0.5
+NUM_READINGS = 5000
 
 # These will match the EPC hex values to tags from the kit for easier ID during testing
-epc_name_match = defaultdict(lambda: "Unknown or empty tag", {
+epc_name_match = defaultdict(lambda: "Incomplete or error tag", {
     '00471118b06026a28e0114346c': "medium1",
     '004717929064269d88010e9392': "medium2",
     '8068940000501a4a9584a57fde': "large",
@@ -36,24 +36,22 @@ card_rssi_total = 0
 
 
 
-# Return a list [epc, rssi] that is extracted from a frame or None if error frame
+# Return a list [epc, rssi] that is extracted from a frame 
 def extract_epc_rssi(frame):
     frame = frame.hex()
 
-    if frame == 'bb01ff00011516':
-        return None
-    else:
-        frame = frame[-44:] # Ensure that any leading bits are cut off from the frame to fix issue of them sometimes not showing up (basically just standardize frame length)
-        frame = frame[2:] # Remove "type" field 
-        frame = frame[2:] # Remove "command" field
-        frame = frame[4:] # Remove "payload length" field MSB and LSB
+    frame = frame[-44:] # Ensure that any leading bits are cut off from the frame to fix issue of them sometimes not showing up (basically just standardize frame length)
+    frame = frame[2:] # Remove "type" field 
+    frame = frame[2:] # Remove "command" field
+    frame = frame[4:] # Remove "payload length" field MSB and LSB
 
-        rssi = frame[2:4] # RSSI field is a signal strength indicator field
+    rssi = frame[2:4] # RSSI field is a signal strength indicator field
 
-        frame = frame[8:] # Remove the PC MSB and LSB fields (as well as RSSI), which define extra flags for the tag (dont know what they might be for though)
-        frame = frame[:-2] # Remove checksum
+    frame = frame[8:] # Remove the PC MSB and LSB fields (as well as RSSI), which define extra flags for the tag (dont know what they might be for though)
+    frame = frame[:-2] # Remove checksum
 
-        return [frame, rssi]
+    return [frame, rssi]
+
 
 def update_totals(tag_name, rssi):
     global medium1_scan_count, medium2_scan_count, large_scan_count, small_scan_count, card_scan_count
@@ -71,9 +69,11 @@ def update_totals(tag_name, rssi):
     elif tag_name == "small":
         small_scan_count += 1
         small_rssi_total += int(rssi, 16)
-    else:
+    elif tag_name == "card":
         card_scan_count += 1
         card_rssi_total += int(rssi, 16)
+    else:
+        pass
     
 
 
@@ -99,17 +99,14 @@ try:
                     if frame:
                         tag_info = extract_epc_rssi(frame)
                         
-                        if tag_info == None:  
-                            print("Received error frame (no RFID scanned or failed CRC check)")
-                        else:
-                            print("EPC:", tag_info[0], "| RSSI:", tag_info[1], "| Name:", epc_name_match[tag_info[0]])
-                            update_totals(epc_name_match[tag_info[0]], tag_info[1])
+                        print("EPC:", tag_info[0], "| RSSI:", tag_info[1], "| Name:", epc_name_match[tag_info[0]])
+                        update_totals(epc_name_match[tag_info[0]], tag_info[1])
             else:
                 print("Error data frame (nothing scanned):", data)
 
         time.sleep(SCAN_FREQUENCY)
 
-    print("Totals:\n")
+    print("\nTotals:")
     if (medium1_scan_count > 0):
         print(f"Medium 1 | Scans {medium1_scan_count}/{NUM_READINGS} | Avg RSSI = {medium1_rssi_total / medium1_scan_count}")
     if (medium2_scan_count > 0):
