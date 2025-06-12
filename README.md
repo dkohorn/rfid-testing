@@ -23,3 +23,4 @@ Download rfid_testing.py onto a machine and connect an RFID scanner via USB. All
     - The next 3 digits likely allude to the type of tag scanned. Of the 5 flags tested, 2 of these values matched. The 2 that matched are seemingly identical tags physically, while the others all differ in size and shape.
     - The rest of the data in the EPC tag does not appear to show any patterns to discern information from. However, since these values differ completely, they should be enough to work as IDs on individual tags.
  - There is a dictionary containing 5 tags used for testing, where their EPC is known. All other scans will fall into an "unknown" catagory. After the scanning is complete, the scan frequency and average signal strength will be displayed for each known tags, and the unknown tag count will be displayed as well.
+ - Note that the first reading is always an error read. This is marked as reading #0 and does not affect any further function of the program.
