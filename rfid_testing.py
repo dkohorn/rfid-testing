@@ -3,7 +3,8 @@ import time
 from collections import defaultdict
 
 SCAN_FREQUENCY = 0.5
-NUM_READINGS = 25
+NUM_READINGS = 10000
+
 PORT = 'COM4'
 
 
@@ -38,7 +39,8 @@ def extract_epc_rssi(frame):
     frame = frame[2:] # Remove "command" field
     frame = frame[4:] # Remove "payload length" field MSB and LSB
 
-    rssi = frame[2:4] # RSSI field is a signal strength indicator field
+    #! Normalize rssi for distance, current range is just 230-170
+    rssi = frame[0:2] # RSSI field is a signal strength indicator field
 
     frame = frame[8:] # Remove the PC MSB and LSB fields (as well as RSSI), which define extra flags for the tag (dont know what they might be for though)
     frame = frame[:-2] # Remove checksum
