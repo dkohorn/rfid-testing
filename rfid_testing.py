@@ -2,15 +2,15 @@ import serial
 import time
 from collections import defaultdict
 
+SCAN_FREQUENCY = 0.5
+NUM_READINGS = 25
+PORT = 'COM4'
+
+
 SINGLE_POLL_BYTES = bytes.fromhex('BB 00 22 00 00 22 7E')
 MULTIPLE_POLL_BEGIN_BYTES = bytes.fromhex('BB 00 27 00 03 22 27 10 83 7E')
 MULTIPLE_POLL_STOP_BYTES = bytes.fromhex('BB 00 28 00 00 28 7E')
-
-PORT = 'COM4'
 ser = serial.Serial(PORT, 115200, timeout=0.5)
-
-SCAN_FREQUENCY = 0.5
-NUM_READINGS = 25
 
 # These will match the EPC hex values to tags from the kit for easier ID during testing
 # These were obtained through manual scans and data parsing
@@ -22,7 +22,7 @@ known_tags = {
     '000017570d0155255013e89a23': "Card"
 }
 
-#dictionary for holding relevant info for each tage, updated with the update_totals function
+#dictionary for holding relevant info for each tag, changed through the update_totals function
 #formated like tag_name: [scan_count, rssi_count]
 tag_collection_data = {}
 
@@ -33,7 +33,7 @@ unknown_tag_count = 0
 def extract_epc_rssi(frame):
     frame = frame.hex()
 
-    frame = frame[-44:] # Ensure that any leading bits are cut off from the frame to fix issue of them sometimes not showing up (basically just standardize frame length) This will get rid of headers like "BB"
+    frame = frame[-44:] # Ensure that any leading bits are cut off from the frame (gets rid of headers like "bb")
     frame = frame[2:] # Remove "type" field 
     frame = frame[2:] # Remove "command" field
     frame = frame[4:] # Remove "payload length" field MSB and LSB
@@ -43,7 +43,7 @@ def extract_epc_rssi(frame):
     frame = frame[8:] # Remove the PC MSB and LSB fields (as well as RSSI), which define extra flags for the tag (dont know what they might be for though)
     frame = frame[:-2] # Remove checksum
 
-    return [frame, int(rssi, 16)] #convert to decimal from hex
+    return [frame, int(rssi, 16)] 
 
 
 def update_totals(tag_name, rssi):
