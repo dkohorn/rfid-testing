@@ -2,3 +2,4 @@ venv/
 .docx
 .tmp
 __pycache__/
+.csv
