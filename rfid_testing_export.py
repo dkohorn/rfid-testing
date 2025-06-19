@@ -1,6 +1,7 @@
 import serial
 import time
-from collections import defaultdict
+from datetime import datetime
+
 
 SCAN_FREQUENCY = 0.10
 NUM_READINGS = 300     #Will read once every 0.1 seconds (100 ms)  for 30 seconds (300 readings)
@@ -20,7 +21,7 @@ known_tags = {
     '000017570d0155255013e89a23': "Card"
 }
 
-
+rssi_list = []
 
 
 # Return a list [epc, rssi] that is extracted from a frame 
@@ -51,17 +52,33 @@ def extract_epc_rssi(frame):
     return [frame, normalized_rssi] 
 
 
-def write_to_csv(tag_name, output_file, reading_num, rssi):
+def write_to_csv(tag_name, reading_num, rssi, output_file):
     output_file.write(f"{tag_name}, {rssi}, {reading_num}\n")
 
+    if rssi != "":
+        rssi_list.append(rssi)
+
+def calculate_info():
+    rssi_list.sort()
+    mean = round(sum(rssi_list) / len(rssi_list), 2)
+    median = rssi_list[int(len(rssi_list) / 2)]
+    output_file.write(f"\nMean, Median\n")
+    output_file.write(f"{mean}, {median}\n")
 
 
+print("Enter the name of the file to save data to:")
+file_name = input()
+file_name += ".csv"
 
+
+output_file = open(file_name, 'w')
+
+todays_date = datetime.now().strftime("%Y-%m-%d")
+output_file.write(f"Tag Name, RSSI (dbm), Time (sec), , {todays_date}\n")
 
 
 print(f"Beginning inventory (scan {NUM_READINGS} times every {SCAN_FREQUENCY} seconds)")
-output_file = open('data_output.csv', 'w')
-output_file.write("Tag Name, RSSI (dbm), Time (sec)\n")
+
 
 try:
     for i in range(NUM_READINGS + 1): #Add one extra because first scan is always an error scan
@@ -81,15 +98,17 @@ try:
 
                         if tag_info[0] in known_tags:
                             print("EPC:", tag_info[0], "| RSSI:", tag_info[1], "| Name:", known_tags[tag_info[0]])
-                            write_to_csv(known_tags[tag_info[0]], output_file, i / 10, tag_info[1])
+                            write_to_csv(known_tags[tag_info[0]], i / 10, tag_info[1], output_file)
                         else:
                             print("Unknown, incomplete, or error tag")
-                            write_to_csv("Blank", output_file, i / 10, "-")
+                            write_to_csv("", "", "", output_file)
             else:
                 print("Error data frame (nothing scanned):", data)
-                write_to_csv("Blank", output_file, i / 10, "-")
+                write_to_csv("", "", "", output_file)
 
         time.sleep(SCAN_FREQUENCY)
+    
+    calculate_info()
     
 
 except KeyboardInterrupt:
